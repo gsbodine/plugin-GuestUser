@@ -167,7 +167,7 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function filterGuestUserWidgets($widgets)
     {
-        $widget = array('label'=>'My Account');
+       /* $widget = array('label'=>'My Account');
         $passwordUrl = url('guest-user/user/change-password');
         $accountUrl = url('guest-user/user/update-account');
         $html = "<ul>";
@@ -175,7 +175,7 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
         $html .= "<li><a href='$accountUrl'>Update Account Info</a></li>";
         $html .= "</ul>";
         $widget['content'] = $html;
-        $widgets[] = $widget;
+        $widgets[] = $widget; */
         return $widgets;
     }
 

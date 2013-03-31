@@ -156,6 +156,8 @@ class GuestUser_UserController extends Omeka_Controller_AbstractActionController
             $record->confirmed = true;
             $record->save();
             $user = $db->getTable('User')->find($record->user_id);
+            $user->active = 1;
+            $user->save(false);
             $this->_sendAdminNewConfirmedUserEmail($user);
             $this->_sendConfirmedEmail($user);
             $message = "Please check the email we just sent you for the next steps! You're almost there!";
@@ -226,20 +228,17 @@ class GuestUser_UserController extends Omeka_Controller_AbstractActionController
         return $form;        
     }
     
-    protected function _sendConfirmedEmail($user)
-    {
+    protected function _sendConfirmedEmail($user) {
+        $transport = $this->_getSMTP();
         $siteTitle = get_option('site_title');
-        $body = "Thanks for joining $siteTitle!";
-        if(get_option('guest_user_open') == 'on') {
-            $body .= "\n\n You can now log in using the password you chose.";
-        } else {
-            $body .= "\n\n When an administrator approves your account, you will receive another message that you" .
-                    "can log in with the password you chose.";
-        }
+        
+        $body = "<p><strong>Thanks for joining $siteTitle (MBDA)!</strong></p>";
+        $body .= "<p>Your account is now active, and we hope you'll <a href=\"http://mbda.berry.edu/get-started\">get started</a> and begin researching and editing the collection soon.";
+        
         $subject = "Registration for $siteTitle";
         $mail = $this->_getMail($user, $body, $subject);
         try {
-            $mail->send();
+            $mail->send($transport);
         } catch (Exception $e) {
             _log($e);
             _log($body);
@@ -252,7 +251,7 @@ class GuestUser_UserController extends Omeka_Controller_AbstractActionController
         $siteTitle = get_option('site_title');
         $url = WEB_ROOT . '/guest-user/user/confirm/token/' . $token->token;
         $siteUrl = absolute_url('/');
-        $subject = "Your request to join $siteTitle";
+        $subject = "Your request to join $siteTitle (MBDA)";
         $body = "You have registered for an account on <a href='$siteUrl'>$siteTitle</a>. Please confirm your registration by following <a href='$url'>this link</a>.  If you did not request to join $siteTitle please disregard this email.";
         $mail = $this->_getMail($user, $body, $subject);
         try {
