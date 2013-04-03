@@ -229,7 +229,6 @@ class GuestUser_UserController extends Omeka_Controller_AbstractActionController
     }
     
     protected function _sendConfirmedEmail($user) {
-        $transport = $this->_getSMTP();
         $siteTitle = get_option('site_title');
         
         $body = "<p><strong>Thanks for joining $siteTitle (MBDA)!</strong></p>";
@@ -251,8 +250,8 @@ class GuestUser_UserController extends Omeka_Controller_AbstractActionController
         $siteTitle = get_option('site_title');
         $url = WEB_ROOT . '/guest-user/user/confirm/token/' . $token->token;
         $siteUrl = absolute_url('/');
-        $subject = "Your request to join $siteTitle (MBDA)";
-        $body = "You have registered for an account on <a href='$siteUrl'>$siteTitle</a>. Please confirm your registration by following <a href='$url'>this link</a>.  If you did not request to join $siteTitle please disregard this email.";
+        $subject = "Your request to join $siteTitle";
+        $body = "You have registered for an account on <a href='$siteUrl'>$siteTitle (MBDA)</a>. Please confirm your registration by following <a href='$url'>this link</a>.  If you did not request to join $siteTitle please disregard this email.";
         $mail = $this->_getMail($user, $body, $subject);
         try {
             $mail->send();
