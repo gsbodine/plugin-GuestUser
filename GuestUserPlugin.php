@@ -10,6 +10,7 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
 {
     protected $_hooks = array(
         'install',
+        'uninstall',
         'define_acl',
         'public_header',
         'public_head',
@@ -48,10 +49,33 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
                 ";
 
         $db->query($sql);        
+        
+        //if plugin was uninstalled/reinstalled, reactivate the guest users
+        $guestUsers = $this->_db->getTable('User')->findBy(array('role'=>'guest'));
+        //skip activation emails when reinstalling
+        if(count($guestUsers) != 0) {
+            set_option('guest_user_skip_activation_email', true);
+            foreach($guestUsers as $user) {
+                $user->active = true;
+                $user->save();
+            }
+            set_option('guest_user_skip_activation_email', false);
+        }     
+        
         set_option('guest_user_login_text', 'Login');
         set_option('guest_user_register_text', 'Register');
     }
 
+    public function hookUninstall($args)
+    {
+        //deactivate the guest users
+        $guestUsers = $this->_db->getTable('User')->findBy(array('role'=>'guest'));
+        debug(count($guestUsers));
+        foreach($guestUsers as $user) {
+            $user->active = false;
+            $user->save();
+        }
+    }
 
     public function hookDefineAcl($args)
     {
@@ -106,6 +130,9 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function hookBeforeSaveUser($args)
     {
+        if(get_option('guest_user_skip_activation_email')) {
+            return;
+        }
         $post = $args['post'];
         $record = $args['record'];
         //compare the active status being set with what's actually in the database
@@ -144,17 +171,18 @@ class GuestUserPlugin extends Omeka_Plugin_AbstractPlugin
         
             return $navLinks;
         }
-        
+        $loginLabel = get_option('guest_user_login_text') ? get_option('guest_user_login_text') : __('Login');
+        $registerLabel = get_option('guest_user_register_text') ? get_option('guest_user_register_text') : __('Register'); 
         $navLinks = array(
                 'guest-user-login' => array(
                     'id' => 'guest-user-login',
-                    'label' => __('Login'),
+                    'label' => $loginLabel,
                     'uri' => url('guest-user/user/login')
                 ),
                 
                 'guest-user-register' => array(
                     'id' => 'guest-user-register', 
-                    'label' => __('Register'),
+                    'label' => $registerLabel,
                     'uri' => url('guest-user/user/register'),
                     )
                 
